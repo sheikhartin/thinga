@@ -53,6 +53,7 @@ class UserProfileUpdate(BaseModel):
 
 class ImageBase(BaseModel):
     media_file: str = Field(..., max_length=35)
+    alt_text: Optional[str] = Field(None, max_length=250)
 
 
 class ImageCreate(ImageBase):

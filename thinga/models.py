@@ -48,6 +48,7 @@ class Image(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     media_file = Column(String(35), nullable=False)
+    alt_text = Column(String(250))
     score = Column(Integer, default=0)
     created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
 
