@@ -1,0 +1,23 @@
+exclude = [
+    ".eggs",
+    ".git",
+    ".ipynb_checkpoints",
+    ".mypy_cache",
+    ".pytest_cache",
+    ".ruff_cache",
+    ".tox",
+    ".venv",
+    ".vscode",
+    "build",
+    "dist",
+    "node_modules",
+    "site-packages",
+    "venv",
+]
+line-length = 80
+indent-width = 4
+target-version = "py312"
+
+[format]
+quote-style = "double"
+indent-style = "space"
