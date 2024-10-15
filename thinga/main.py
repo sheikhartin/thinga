@@ -6,7 +6,7 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
 
 from thinga.database import Base, engine
-from thinga.routers import user_management
+from thinga.routers import user_management, ranking_system
 from thinga.config import MEDIA_STORAGE_PATH
 
 
@@ -37,3 +37,4 @@ app.mount(
 )
 
 app.include_router(user_management.router, tags=["User Management"])
+app.include_router(ranking_system.router, tags=["Images and Ratings"])
