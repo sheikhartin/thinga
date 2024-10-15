@@ -3,7 +3,7 @@ from typing import Iterator
 from fastapi import Request, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
-from thinga import models, crud, utils
+from thinga import models, crud, enums, utils
 from thinga.database import SessionLocal
 
 
@@ -49,3 +49,17 @@ async def get_current_user(
             detail="User not found.",
         )
     return db_user
+
+
+async def get_admin_or_moderator(
+    current_user: models.User = Depends(get_current_user),
+):
+    if current_user.role not in (
+        enums.UserRole.ADMIN,
+        enums.UserRole.MODERATOR,
+    ):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Only admins and moderators can perform this action.",
+        )
+    return current_user
