@@ -5,13 +5,18 @@ from datetime import datetime, timezone
 from typing import Optional
 
 from fastapi import UploadFile, HTTPException, status
+from sqlalchemy import func
 from sqlalchemy.orm import Session
 
 from thinga import models, schemas, enums, utils
-from thinga.config import AVATARS_STORAGE_PATH, MAX_IMAGE_SIZE_BYTES
+from thinga.config import (
+    GALLERY_STORAGE_PATH,
+    AVATARS_STORAGE_PATH,
+    MAX_IMAGE_SIZE_BYTES,
+)
 
 
-def get_user_by_id(db: Session, user_id: int) -> Optional[models.User]:
+def get_user_by_id(*, db: Session, user_id: int) -> Optional[models.User]:
     return db.query(models.User).filter(models.User.id == user_id).first()
 
 
@@ -86,6 +91,65 @@ def get_profile_by_user_id(
         .filter(models.Profile.user_id == user_id)
         .first()
     )
+
+
+def get_image_by_id(*, db: Session, image_id: int) -> Optional[models.Image]:
+    return db.query(models.Image).filter(models.Image.id == image_id).first()
+
+
+def get_two_random_images(
+    *,
+    db: Session,
+) -> list[models.Image]:
+    return db.query(models.Image).order_by(func.random()).limit(2).all()
+
+
+def create_image(
+    *,
+    db: Session,
+    image: schemas.ImageCreate,
+) -> models.Image:
+    file_name = save_image_file(
+        file=image.media_file,
+        storage_path=GALLERY_STORAGE_PATH,
+    )
+    db_image = models.Image(media_file=file_name, alt_text=image.alt_text)
+    db.add(db_image)
+    db.commit()
+    db.refresh(db_image)
+    return db_image
+
+
+def update_image_score(
+    *,
+    db: Session,
+    image_id: int,
+) -> models.Image:
+    db_image = get_image_by_id(db=db, image_id=image_id)
+    if db_image is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Image not found.",
+        )
+    db_image.score += 1
+    db.commit()
+    db.refresh(db_image)
+    return db_image
+
+
+def delete_image(
+    *,
+    db: Session,
+    image_id: int,
+) -> None:
+    db_image = get_image_by_id(db=db, image_id=image_id)
+    if db_image is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Image not found.",
+        )
+    db.delete(db_image)
+    db.commit()
 
 
 def get_session_by_access_token(
