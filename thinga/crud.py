@@ -77,6 +77,24 @@ def create_user(*, db: Session, user: schemas.UserCreate) -> models.User:
     return db_user
 
 
+def update_user_role(
+    *,
+    db: Session,
+    username: str,
+    new_role: enums.UserRole,
+) -> models.User:
+    db_user = get_user_by_username(db=db, username=username)
+    if db_user is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"User with username `{username}` not found.",
+        )
+    db_user.role = new_role
+    db.commit()
+    db.refresh(db_user)
+    return db_user
+
+
 def get_profile_by_user_id(
     *,
     db: Session,
@@ -89,12 +107,64 @@ def get_profile_by_user_id(
     )
 
 
+def update_user_profile(
+    *,
+    db: Session,
+    user: schemas.UserProfileUpdate,
+    existing_user: models.User,
+) -> models.User:
+    if (
+        user.username is not None
+        and get_user_by_username(db=db, username=user.username) is not None
+    ):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Username `{user.username}` already registered.",
+        )
+    elif (
+        user.email is not None
+        and get_user_by_email(db=db, email=user.email) is not None
+    ):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Email `{user.email}` already registered.",
+        )
+
+    existing_user.username = user.username or existing_user.username
+    existing_user.email = user.email or existing_user.email
+    if user.password is not None:
+        existing_user.password = utils.get_password_hash(user.password)
+    existing_user.profile.display_name = (
+        user.display_name or existing_user.profile.display_name
+    )
+    existing_user.profile.bio = user.bio or existing_user.profile.bio
+    if user.avatar_file is not None:
+        avatar_file_name = save_image_file(
+            file=user.avatar_file,
+            storage_path=AVATARS_STORAGE_PATH,
+        )
+        existing_user.profile.avatar_file = avatar_file_name
+    db.commit()
+    db.refresh(existing_user)
+
+    return existing_user
+
+
 def get_images(*, db: Session) -> list[models.Image]:
     return db.query(models.Image).all()
 
 
 def get_two_random_images(*, db: Session) -> list[models.Image]:
     return db.query(models.Image).order_by(func.random()).limit(2).all()
+
+
+def get_top_ranked_images(*, db: Session, limit: int) -> list[models.Image]:
+    return (
+        db.query(models.Image)
+        .order_by(models.Image.score.desc())
+        .limit(limit)
+        .all()
+    )
 
 
 def get_image_by_id(*, db: Session, image_id: int) -> Optional[models.Image]:
