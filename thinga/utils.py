@@ -28,7 +28,6 @@ def generate_client_fingerprint(request: Request) -> str:
 
 
 def generate_unique_file_name(file_name: str) -> str:
-    unique_id_length = 15
-    unique_id = uuid.uuid4().hex[:unique_id_length]
+    unique_id = uuid.uuid4().hex[:15]
     _, file_extension = os.path.splitext(file_name)
     return f"{unique_id}{file_extension}"
