@@ -13,8 +13,13 @@ from fastapi import (
 )
 from sqlalchemy.orm import Session
 
-from thinga import models, schemas, crud, utils
-from thinga.dependencies import get_db, get_access_token, get_current_user
+from thinga import models, schemas, crud, enums, utils
+from thinga.dependencies import (
+    get_db,
+    get_access_token,
+    get_current_user,
+    get_admin_or_moderator,
+)
 from thinga.config import DEBUG_ENABLED
 
 router = APIRouter()
@@ -71,7 +76,7 @@ async def create_user(
     password: str = Body(...),
     display_name: str = Body(...),
     bio: Optional[str] = Body(None),
-    avatar_file: UploadFile = File(None),
+    avatar_file: Optional[UploadFile] = File(None),
     db: Session = Depends(get_db),
 ):
     try:
@@ -96,3 +101,43 @@ async def read_users_me(
     current_user: models.User = Depends(get_current_user),
 ):
     return current_user
+
+
+@router.patch("/users/me/", response_model=schemas.User)
+async def update_user_profile(
+    username: Optional[str] = Body(None),
+    email: Optional[str] = Body(None),
+    password: Optional[str] = Body(None),
+    display_name: Optional[str] = Body(None),
+    bio: Optional[str] = Body(None),
+    avatar_file: Optional[UploadFile] = File(None),
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_user),
+):
+    try:
+        user_data = schemas.UserProfileUpdate(
+            username=username,
+            email=email,
+            password=password,
+            display_name=display_name,
+            bio=bio,
+            avatar_file=avatar_file,
+        )
+    except ValueError as e:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Failed to update user.",
+        ) from e
+    return crud.update_user_profile(
+        db=db, user=user_data, existing_user=current_user
+    )
+
+
+@router.patch("/users/{username}/role/", response_model=schemas.User)
+async def update_user_role(
+    username: str,
+    new_role: enums.UserRole,
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_admin_or_moderator),
+):
+    return crud.update_user_role(db=db, username=username, new_role=new_role)
