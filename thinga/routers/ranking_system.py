@@ -19,6 +19,11 @@ async def get_random_images(db: models.Session = Depends(get_db)):
     return crud.get_two_random_images(db=db)
 
 
+@router.get("/images/top-ranked/", response_model=list[schemas.Image])
+async def get_top_ranked_images(db: Session = Depends(get_db)):
+    return crud.get_top_ranked_images(db=db, limit=20)
+
+
 @router.get("/images/{image_id}/", response_model=schemas.Image)
 async def get_image(image_id: int, db: Session = Depends(get_db)):
     db_image = crud.get_image_by_id(db=db, image_id=image_id)
@@ -35,7 +40,7 @@ async def upload_image(
     media_file: UploadFile = File(None),
     alt_text: Optional[str] = None,
     db: Session = Depends(get_db),
-    user: models.User = Depends(get_admin_or_moderator),
+    current_user: models.User = Depends(get_admin_or_moderator),
 ):
     new_image = schemas.ImageCreate(media_file=media_file, alt_text=alt_text)
     return crud.create_image(db=db, image=new_image)
@@ -55,8 +60,10 @@ async def delete_image(
 async def rate_image(
     image_id: int,
     db: Session = Depends(get_db),
-    user: models.User = Depends(get_current_user),
+    current_user: models.User = Depends(get_current_user),
 ):
-    rating_data = schemas.RatingCreate(user_id=user.id, image_id=image_id)
+    rating_data = schemas.RatingCreate(
+        user_id=current_user.id, image_id=image_id
+    )
     crud.create_rating(db=db, rating=rating_data)
     return crud.update_image_score(db=db, image_id=image_id)
