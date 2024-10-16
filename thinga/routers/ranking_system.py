@@ -9,18 +9,18 @@ from thinga.dependencies import get_db, get_current_user, get_admin_or_moderator
 router = APIRouter()
 
 
+@router.get("/images/", response_model=list[schemas.Image])
+async def get_images(db: models.Session = Depends(get_db)):
+    return crud.get_images(db=db)
+
+
 @router.get("/images/random/", response_model=list[schemas.Image])
-async def get_random_images(
-    db: models.Session = Depends(get_db),
-):
+async def get_random_images(db: models.Session = Depends(get_db)):
     return crud.get_two_random_images(db=db)
 
 
 @router.get("/images/{image_id}/", response_model=schemas.Image)
-async def read_image(
-    image_id: int,
-    db: Session = Depends(get_db),
-):
+async def get_image(image_id: int, db: Session = Depends(get_db)):
     db_image = crud.get_image_by_id(db=db, image_id=image_id)
     if db_image is None:
         raise HTTPException(
@@ -57,4 +57,6 @@ async def rate_image(
     db: Session = Depends(get_db),
     user: models.User = Depends(get_current_user),
 ):
+    rating_data = schemas.RatingCreate(user_id=user.id, image_id=image_id)
+    crud.create_rating(db=db, rating=rating_data)
     return crud.update_image_score(db=db, image_id=image_id)

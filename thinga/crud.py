@@ -34,11 +34,7 @@ def get_user_by_email(*, db: Session, email: str) -> Optional[models.User]:
     return db.query(models.User).filter(models.User.email == email).first()
 
 
-def create_user(
-    *,
-    db: Session,
-    user: schemas.UserCreate,
-) -> models.User:
+def create_user(*, db: Session, user: schemas.UserCreate) -> models.User:
     if get_user_by_username(db=db, username=user.username) is not None:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -93,22 +89,19 @@ def get_profile_by_user_id(
     )
 
 
+def get_images(*, db: Session) -> list[models.Image]:
+    return db.query(models.Image).all()
+
+
+def get_two_random_images(*, db: Session) -> list[models.Image]:
+    return db.query(models.Image).order_by(func.random()).limit(2).all()
+
+
 def get_image_by_id(*, db: Session, image_id: int) -> Optional[models.Image]:
     return db.query(models.Image).filter(models.Image.id == image_id).first()
 
 
-def get_two_random_images(
-    *,
-    db: Session,
-) -> list[models.Image]:
-    return db.query(models.Image).order_by(func.random()).limit(2).all()
-
-
-def create_image(
-    *,
-    db: Session,
-    image: schemas.ImageCreate,
-) -> models.Image:
+def create_image(*, db: Session, image: schemas.ImageCreate) -> models.Image:
     file_name = save_image_file(
         file=image.media_file,
         storage_path=GALLERY_STORAGE_PATH,
@@ -120,11 +113,7 @@ def create_image(
     return db_image
 
 
-def update_image_score(
-    *,
-    db: Session,
-    image_id: int,
-) -> models.Image:
+def update_image_score(*, db: Session, image_id: int) -> models.Image:
     db_image = get_image_by_id(db=db, image_id=image_id)
     if db_image is None:
         raise HTTPException(
@@ -137,11 +126,7 @@ def update_image_score(
     return db_image
 
 
-def delete_image(
-    *,
-    db: Session,
-    image_id: int,
-) -> None:
+def delete_image(*, db: Session, image_id: int) -> None:
     db_image = get_image_by_id(db=db, image_id=image_id)
     if db_image is None:
         raise HTTPException(
@@ -150,6 +135,18 @@ def delete_image(
         )
     db.delete(db_image)
     db.commit()
+
+
+def create_rating(
+    *,
+    db: Session,
+    rating: schemas.RatingCreate,
+) -> models.Rating:
+    db_rating = models.Rating(user_id=rating.user_id, image_id=rating.image_id)
+    db.add(db_rating)
+    db.commit()
+    db.refresh(db_rating)
+    return db_rating
 
 
 def get_session_by_access_token(

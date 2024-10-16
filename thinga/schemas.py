@@ -69,16 +69,16 @@ class Image(ImageBase):
 
 
 class RatingBase(BaseModel):
-    pass
+    user_id: int = Field(..., ge=1)
+    image_id: int = Field(..., ge=1)
 
 
 class RatingCreate(RatingBase):
-    image_id: int = Field(..., ge=1)
+    pass
 
 
 class Rating(RatingBase):
     model_config = ConfigDict(from_attributes=True)
 
     id: int = Field(..., ge=1)
-    user_id: int = Field(..., ge=1)
     created_at: datetime
