@@ -53,7 +53,7 @@ async def get_current_user(
 
 async def get_admin_or_moderator(
     current_user: models.User = Depends(get_current_user),
-):
+) -> models.User:
     if current_user.role not in (
         enums.UserRole.ADMIN,
         enums.UserRole.MODERATOR,
