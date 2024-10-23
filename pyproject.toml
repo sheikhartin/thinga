@@ -1,6 +1,6 @@
 [project]
 name = "thinga"
-version = "0.1.1"
+version = "0.1.2"
 description = "Rate things."
 authors = ["Artin Mohammadi <sheikhartin@gmail.com>"]
 license = "MIT"
