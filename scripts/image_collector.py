@@ -3,6 +3,7 @@
 import argparse
 import os
 import uuid
+import random
 import re
 import asyncio
 import http
@@ -26,13 +27,15 @@ async def collect_image_urls(
 ) -> list[str]:
     """Collects image URLs from DuckDuckGo."""
     await page.goto(
-        f"https://duckduckgo.com/?t=h_&q={query}&iax=images&ia=images"
+        f"https://duckduckgo.com/?t=h_&q={query}&iax=images&ia=images",
+        wait_until="domcontentloaded",
     )
-    await asyncio.sleep(7)  # Wait for the page to load
+    await asyncio.sleep(8)  # Wait for the page to load
 
     image_elements = await page.query_selector_all(
         "xpath=//img[contains(@class, 'tile--img__img')]"
     )
+    random.shuffle(image_elements)
     image_urls = [
         _correct_image_url(await img.get_attribute("src"))
         for img in image_elements[:max_images]
