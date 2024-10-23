@@ -7,7 +7,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from thinga.database import Base, engine
 from thinga.routers import user_management, image_comparison
-from thinga.config import MEDIA_STORAGE_PATH
+from thinga.config import ALLOWED_ORIGINS, MEDIA_STORAGE_PATH
 
 
 @asynccontextmanager
@@ -25,9 +25,10 @@ app = FastAPI(
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=ALLOWED_ORIGINS,
     allow_methods=["*"],
     allow_headers=["*"],
+    allow_credentials=True,
 )
 
 app.mount(
