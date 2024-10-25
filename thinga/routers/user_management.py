@@ -20,7 +20,11 @@ from thinga.dependencies import (
     get_current_user,
     get_admin_or_moderator,
 )
-from thinga.config import DEBUG_ENABLED
+from thinga.config import (
+    COOKIE_SECURE_MODE,
+    COOKIE_NO_JS_ACCESS,
+    COOKIE_SAMESITE_POLICY,
+)
 
 router = APIRouter()
 
@@ -51,9 +55,9 @@ async def login(
     response.set_cookie(
         key="access_token",
         value=db_session.access_token,
-        httponly=True,
-        secure=False if DEBUG_ENABLED else True,
-        samesite="lax",
+        httponly=COOKIE_NO_JS_ACCESS,
+        secure=COOKIE_SECURE_MODE,
+        samesite=COOKIE_SAMESITE_POLICY,
     )
     return db_user
 
