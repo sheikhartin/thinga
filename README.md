@@ -44,6 +44,22 @@ uv run uvicorn thinga.main:app --port 9906
 
 Now go to http://127.0.0.1:9906 and use it!
 
+The front-end codebase for this project is available on [GitHub](https://github.com/sheikhartin/thinga-website).
+
+#### Automation Scripts
+
+Collect images from DuckDuckGo based on a query easily:
+
+```
+uv run python scripts/image_collector.py 'Hollywood celebrities' --max-images 15
+```
+
+Upload collected images to the Thinga API:
+
+```
+./scripts/upload_collected_images.sh -u root -p toor
+```
+
 ### License
 
 This project is licensed under the MIT license found in the [LICENSE](LICENSE) file in the root directory of this repository.
